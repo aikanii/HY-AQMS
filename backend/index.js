@@ -34,13 +34,17 @@ app.use('/api/', limiter);
 const JWT_SECRET = process.env.JWT_SECRET || 'aqms_super_secret_key';
 
 // Database connection
-const pool = new Pool({
-  user: process.env.POSTGRES_USER || 'aqms_user',
-  host: process.env.POSTGRES_HOST || 'timescale',
-  database: process.env.POSTGRES_DB || 'aqms',
-  password: process.env.POSTGRES_PASSWORD || 'secret',
-  port: process.env.POSTGRES_PORT || 5432,
-});
+const pool = new Pool(
+  process.env.DATABASE_URL
+    ? { connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } }
+    : {
+        user: process.env.POSTGRES_USER || 'aqms_user',
+        host: process.env.POSTGRES_HOST || 'timescale',
+        database: process.env.POSTGRES_DB || 'aqms',
+        password: process.env.POSTGRES_PASSWORD || 'secret',
+        port: process.env.POSTGRES_PORT || 5432,
+      }
+);
 
 // Redis connection
 const redisClient = redis.createClient({

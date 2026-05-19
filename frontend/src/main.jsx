@@ -18,6 +18,19 @@ const initApp = async () => {
     console.warn('[HY-AQMS] Could not fetch raw GitHub API URL, using local config fallbacks.');
   }
 
+  // Fetch static public config.json containing the production VPS/Render URL
+  try {
+    const response = await fetch('/config.json?t=' + Date.now());
+    if (response.ok) {
+      const data = await response.json();
+      if (data && data.api_url) {
+        localStorage.setItem('aqms_production_api_url', data.api_url);
+      }
+    }
+  } catch (err) {
+    console.warn('[HY-AQMS] Could not fetch public config.json, using defaults.');
+  }
+
   // Dynamically import config after localStorage is updated
   const { API_URL } = await import('./config');
   axios.defaults.baseURL = API_URL;
