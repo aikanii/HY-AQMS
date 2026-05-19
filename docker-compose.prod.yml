@@ -64,6 +64,11 @@ services:
     build: ./ml-service
     networks:
       - aqms-net
+    # Single worker prevents parallel cold-start training races where
+    # all Uvicorn workers independently detect no model and launch
+    # simultaneous training jobs, wasting CPU and risking model file
+    # write conflicts on first save.
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --workers 1
     environment:
       - POSTGRES_HOST=timescale
       - POSTGRES_DB=${POSTGRES_DB:-aqms}
@@ -74,7 +79,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    build: 
+    build:
       context: ./frontend
       dockerfile: Dockerfile
     networks:
