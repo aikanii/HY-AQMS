@@ -56,9 +56,11 @@ const LoginSection = ({ setShowSplash, setNotify }) => {
         setTimeout(() => setNotify(null), 4000);
       }, 5000);
       
-    } catch {
+    } catch (err) {
       setShowSplash(false);
-      alert('Login failed: Invalid credentials');
+      console.error('[HY-AQMS] Login Error:', err);
+      const errMsg = err.response?.data?.error || err.message || 'Unknown connection error';
+      alert(`Login failed: ${errMsg}`);
     } finally {
       setLoading(false);
     }
