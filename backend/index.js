@@ -73,6 +73,30 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => console.log('Socket.IO client disconnected:', socket.id));
 });
 
+// --- ML API Proxy to ml-service container ---
+app.all('/api/ml/*', async (req, res) => {
+  const targetUrl = `http://ml-service:8000${req.originalUrl}`;
+  try {
+    const fetchOptions = {
+      method: req.method,
+      headers: {
+        ...req.headers,
+        host: undefined,
+      },
+    };
+    if (req.method !== 'GET' && req.method !== 'HEAD' && req.body) {
+      fetchOptions.body = JSON.stringify(req.body);
+      fetchOptions.headers['content-type'] = 'application/json';
+    }
+    const response = await fetch(targetUrl, fetchOptions);
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (error) {
+    console.error(`[HY-AQMS] ML Proxy Error for ${targetUrl}:`, error);
+    res.status(502).json({ error: 'ML service unavailable', details: error.message });
+  }
+});
+
 // --- Middleware ---
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
