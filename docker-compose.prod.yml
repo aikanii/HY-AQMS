@@ -1,0 +1,104 @@
+version: '3.8'
+
+networks:
+  aqms-net:
+    driver: bridge
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    networks:
+      - aqms-net
+    ports:
+      - "1883:1883"
+      - "8883:8883"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./mosquitto/passwd:/mosquitto/config/passwd
+      - ./mosquitto/certs:/mosquitto/certs:ro
+      - certbot-certs:/etc/letsencrypt:ro
+    restart: unless-stopped
+
+  timescale:
+    image: timescale/timescaledb:latest-pg16
+    networks:
+      - aqms-net
+    # Port 5432 is not exposed to the public internet
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-aqms}
+      POSTGRES_USER: ${POSTGRES_USER:-aqms_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ts_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    networks:
+      - aqms-net
+    # Port 6379 is not exposed to the public internet
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    networks:
+      - aqms-net
+    environment:
+      - POSTGRES_HOST=timescale
+      - POSTGRES_DB=${POSTGRES_DB:-aqms}
+      - POSTGRES_USER=${POSTGRES_USER:-aqms_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - MQTT_URL=mqtt://mosquitto:1883
+      - MQTT_USERNAME=${MQTT_USERNAME}
+      - MQTT_PASSWORD=${MQTT_PASSWORD}
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - NODE_ENV=production
+    depends_on:
+      - timescale
+      - mosquitto
+      - redis
+    restart: unless-stopped
+
+  ml-service:
+    build: ./ml-service
+    networks:
+      - aqms-net
+    environment:
+      - POSTGRES_HOST=timescale
+      - POSTGRES_DB=${POSTGRES_DB:-aqms}
+      - POSTGRES_USER=${POSTGRES_USER:-aqms_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    depends_on:
+      - timescale
+    restart: unless-stopped
+
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    networks:
+      - aqms-net
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN=${DOMAIN}
+    volumes:
+      - certbot-certs:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - certbot-certs:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+volumes:
+  ts_data:
+  certbot-certs:
+  certbot-www:

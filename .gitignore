@@ -1,0 +1,51 @@
+# Dependencies
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+build/
+**/build/
+
+# Environments & secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+*.crt
+*.csr
+passwd
+**/passwd
+secrets/
+
+# Docker / Service volumes & local data
+certs/
+mosquitto/certs/
+mosquitto/data/
+mosquitto/log/
+timescale_data/
+pgdata/
+redis_data/
+db_data/
+*.db
+*.sqlite
+
+# OS / IDEs
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Agent / AI local workspace files
+.agent/
+.gemini/
+artifacts/
+sub_output.txt
+payload.json

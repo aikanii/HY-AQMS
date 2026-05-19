@@ -1,0 +1,84 @@
+version: '3.8'
+
+networks:
+  aqms-net:
+    driver: bridge
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    networks:
+      - aqms-net
+    ports:
+      - "1883:1883"
+      - "8883:8883"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./mosquitto/passwd:/mosquitto/config/passwd
+      - ./mosquitto/certs:/mosquitto/certs
+
+  timescale:
+    image: timescale/timescaledb:latest-pg16
+    networks:
+      - aqms-net
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=aqms
+      - POSTGRES_USER=aqms_user
+      - POSTGRES_PASSWORD=secret
+    volumes:
+      - ts_data:/var/lib/postgresql/data
+      - ./backend/database:/docker-entrypoint-initdb.d/
+
+  redis:
+    image: redis:7-alpine
+    networks:
+      - aqms-net
+    ports:
+      - "6379:6379"
+
+  backend:
+    build: ./backend
+    networks:
+      - aqms-net
+    environment:
+      - POSTGRES_HOST=timescale
+      - POSTGRES_DB=aqms
+      - POSTGRES_USER=aqms_user
+      - POSTGRES_PASSWORD=secret
+      - MQTT_URL=mqtt://mosquitto:1883
+      - MQTT_USERNAME=mydevice
+      - MQTT_PASSWORD=mypassword
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - timescale
+      - mosquitto
+      - redis
+
+  ml-service:
+    build: ./ml-service
+    networks:
+      - aqms-net
+    environment:
+      - POSTGRES_HOST=timescale
+      - POSTGRES_DB=aqms
+      - POSTGRES_USER=aqms_user
+      - POSTGRES_PASSWORD=secret
+    depends_on:
+      - timescale
+
+  frontend:
+    build: ./frontend
+    networks:
+      - aqms-net
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./certs:/etc/nginx/certs
+    depends_on:
+      - backend
+
+volumes:
+  ts_data:
