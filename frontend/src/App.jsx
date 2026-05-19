@@ -145,6 +145,7 @@ const LoginSection = ({ setShowSplash, setNotify }) => {
 const AppInner = () => {
   const { isAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState('map');
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const [readings, setReadings] = useState([]);
   const [devices, setDevices] = useState([]);
@@ -259,10 +260,21 @@ const AppInner = () => {
       <div className="tech-bg" />
       <div className="atm-glow glow-1" />
       <div className="atm-glow glow-2" />
+
+      {/* Mobile Top Header Bar */}
+      <div className="mobile-header">
+        <h2 style={{ margin: 0, color: 'var(--accent)', fontSize: '1.2rem', fontWeight: '800', letterSpacing: '1px' }}>HY-AQMS</h2>
+        <button className="mobile-menu-toggle" onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}>
+          ☰
+        </button>
+      </div>
+
+      {/* Sidebar Backdrop Overlay */}
+      <div className={`sidebar-backdrop ${isMobileSidebarOpen ? 'active' : ''}`} onClick={() => setIsMobileSidebarOpen(false)} />
       
       <div className="app-container" style={{ display: 'flex', height: '100vh', width: '100vw', background: 'transparent', overflow: 'hidden', position: 'relative' }}>
       {/* Sidebar */}
-      <aside className="sidebar glass-panel" style={{ width: '280px', border: 'none', borderRadius: '0', borderRight: '1px solid var(--border)', boxShadow: '5px 0 30px var(--shadow)', zIndex: 10, display: 'flex', flexDirection: 'column', background: 'var(--panel)' }}>
+      <aside className={`sidebar glass-panel ${isMobileSidebarOpen ? 'open' : ''}`} style={{ width: '280px', border: 'none', borderRadius: '0', borderRight: '1px solid var(--border)', boxShadow: '5px 0 30px var(--shadow)', zIndex: 10, display: 'flex', flexDirection: 'column', background: 'var(--panel)' }}>
         <div style={{ padding: '2.5rem 2rem', borderBottom: '1px solid var(--border)', textAlign: 'center' }}>
           <h2 style={{ margin: 0, color: 'var(--accent)', fontSize: '1.6rem', fontWeight: '800', letterSpacing: '1px', textShadow: '0 0 10px rgba(2, 239, 240, 0.5)' }}>HY-AQMS</h2>
           <div style={{ background: 'var(--accent-bg-hover)', border: '1px solid rgba(2, 239, 240, 0.2)', padding: '0.2rem 0.6rem', borderRadius: '12px', display: 'inline-block', marginTop: '0.5rem' }}>
@@ -278,7 +290,10 @@ const AppInner = () => {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  setIsMobileSidebarOpen(false); // Close sidebar on mobile
+                }}
                 className={`nav-btn hover-lift ${isActive ? 'active' : ''}`}
                 style={{
                   width: '100%',

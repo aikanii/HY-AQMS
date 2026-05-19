@@ -23,19 +23,19 @@ const RegionSelector = ({ onSelect }) => {
       padding: '2rem',
       animation: 'fadeIn 0.8s ease'
     }}>
-      <header style={{ textAlign: 'center', marginBottom: '4rem' }}>
-        <h1 style={{ fontSize: '3rem', fontWeight: '900', margin: '0 0 1rem 0', color: 'var(--text)', letterSpacing: '2px' }}>
+      <header style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+        <h1 className="region-selector-title" style={{ fontSize: '3rem', fontWeight: '900', margin: '0 0 1rem 0', color: 'var(--text)', letterSpacing: '2px' }}>
           LOCALIZE YOUR <span style={{ color: 'var(--accent)' }}>EXPERIENCE</span>
         </h1>
-        <p style={{ color: 'var(--text-dim)', fontSize: '1.1rem', maxWidth: '600px', margin: '0 auto' }}>
+        <p style={{ color: 'var(--text-dim)', fontSize: '1rem', maxWidth: '600px', margin: '0 auto', padding: '0 1rem' }}>
           Select a Barangay to monitor hyperlocal air quality in real-time, or view the city-wide ensemble.
         </p>
       </header>
 
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-        gap: '2rem',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+        gap: '1.5rem',
         width: '100%',
         maxWidth: '1200px'
       }}>

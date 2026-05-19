@@ -226,7 +226,7 @@ const Dashboard = ({ readings }) => {
         </div>
       </div>
 
-      <div className="animate-stagger" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)', gap: '1.5rem', animationDelay: '0.3s' }}>
+      <div className="trends-grid animate-stagger" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)', gap: '1.5rem', animationDelay: '0.3s' }}>
         <div className="glass-panel hover-lift" style={{ padding: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
             <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '1px' }}>
