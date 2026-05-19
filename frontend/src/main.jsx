@@ -2,14 +2,31 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import axios from 'axios'
-import { API_URL } from './config'
 import App from './App.jsx'
 
-// Configure global axios defaults for cross-origin support (Vercel)
-axios.defaults.baseURL = API_URL;
+const initApp = async () => {
+  // Try to load dynamic tunnel URL from raw GitHub first
+  try {
+    const response = await fetch('https://raw.githubusercontent.com/aikanii/HY-AQMS/main/frontend/public/api_url.json');
+    if (response.ok) {
+      const data = await response.json();
+      if (data && data.url) {
+        localStorage.setItem('aqms_api_url', data.url);
+      }
+    }
+  } catch (err) {
+    console.warn('[HY-AQMS] Could not fetch raw GitHub API URL, using local config fallbacks.');
+  }
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+  // Dynamically import config after localStorage is updated
+  const { API_URL } = await import('./config');
+  axios.defaults.baseURL = API_URL;
+
+  createRoot(document.getElementById('root')).render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  );
+};
+
+initApp();
