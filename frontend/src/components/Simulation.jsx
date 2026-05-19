@@ -207,10 +207,14 @@ const Simulation = () => {
   useEffect(() => {
     axios.get('/api/devices')
       .then(res => {
-        setDevices(res.data);
-        if (res.data.length > 0 && !deviceId) setDeviceId(res.data[0].device_id);
+        const devicesData = Array.isArray(res.data) ? res.data : [];
+        setDevices(devicesData);
+        if (devicesData.length > 0 && !deviceId) setDeviceId(devicesData[0].device_id);
       })
-      .catch(err => addLog(`FAILED TO FETCH DEVICES: ${err.message}`, 'error'));
+      .catch(err => {
+        addLog(`FAILED TO FETCH DEVICES: ${err.message}`, 'error');
+        setDevices([]);
+      });
   }, []);
 
   // ── Helpers ──────────────────────────────────────────────────────────────────

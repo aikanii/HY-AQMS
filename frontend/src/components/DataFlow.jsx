@@ -305,7 +305,12 @@ const DataFlow = ({ readings }) => {
   }, []);
 
   useEffect(() => {
-    axios.get('/api/devices').then(r => setDevices(r.data)).catch(console.error);
+    axios.get('/api/devices')
+      .then(r => setDevices(Array.isArray(r.data) ? r.data : []))
+      .catch(err => {
+        console.error('Error fetching devices:', err);
+        setDevices([]);
+      });
   }, []);
 
   const getReading = useCallback(

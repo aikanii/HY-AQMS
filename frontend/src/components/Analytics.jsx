@@ -40,12 +40,14 @@ const Analytics = () => {
     const fetchDevices = async () => {
       try {
         const res = await axios.get('/api/devices');
-        setDevices(res.data);
-        if (res.data.length > 0) {
-          setSelectedDeviceId(res.data[0].device_id);
+        const devicesData = Array.isArray(res.data) ? res.data : [];
+        setDevices(devicesData);
+        if (devicesData.length > 0) {
+          setSelectedDeviceId(devicesData[0].device_id);
         }
       } catch (err) {
         console.error('Error fetching devices:', err);
+        setDevices([]);
       } finally {
         setLoading(false);
       }
@@ -63,13 +65,13 @@ const Analytics = () => {
           axios.get(`/api/stats/device/${selectedDeviceId}?range=${range}`),
           axios.get(`/api/readings?device_id=${selectedDeviceId}&limit=50`),
         ]);
-        setStats(statsRes.data);
-        setReadings(readingsRes.data);
+        setStats(Array.isArray(statsRes.data) ? statsRes.data : []);
+        setReadings(Array.isArray(readingsRes.data) ? readingsRes.data : []);
 
         // Handle ML prediction separately so a 503 never blocks stats/readings
         try {
           const mlRes = await axios.get(`/api/ml/predict/device/${selectedDeviceId}`);
-          setPredictions(mlRes.data || []);
+          setPredictions(Array.isArray(mlRes.data) ? mlRes.data : []);
           setMlStatus('ready');
         } catch (mlErr) {
           if (mlErr.response?.status === 503) {
@@ -84,6 +86,9 @@ const Analytics = () => {
         }
       } catch (err) {
         console.error('Error fetching device details:', err);
+        setStats([]);
+        setReadings([]);
+        setPredictions([]);
       } finally {
         setDetailsLoading(false);
       }
@@ -107,7 +112,7 @@ const Analytics = () => {
   // Add prediction data
   const futureLabels = predictions.map(p => {
     const date = new Date(p.time);
-    return '🚀 ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   });
   const futurePm25 = predictions.map(p => p.pm2_5_cal);
 

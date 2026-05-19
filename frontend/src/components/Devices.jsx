@@ -42,9 +42,10 @@ const Devices = ({ isAdmin = false, readings = [] }) => {
   const fetchDevices = async () => {
     try {
       const res = await axios.get('/api/devices');
-      setDevices(res.data);
+      setDevices(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error('Error fetching devices:', err);
+      setDevices([]);
     } finally {
       setLoading(false);
     }

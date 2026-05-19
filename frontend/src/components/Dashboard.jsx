@@ -42,10 +42,12 @@ const Dashboard = ({ readings }) => {
             return { data: [] };
           })
         ]);
-        setStats(statsRes.data);
-        setPredictions(mlRes.data || []);
+        setStats(Array.isArray(statsRes.data) ? statsRes.data : []);
+        setPredictions(Array.isArray(mlRes.data) ? mlRes.data : []);
       } catch (err) {
         console.error('Error fetching stats:', err);
+        setStats([]);
+        setPredictions([]);
       } finally {
         setLoading(false);
       }

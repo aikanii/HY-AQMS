@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import io from 'socket.io-client'
 import axios from 'axios'
 import { API_URL } from './config'
@@ -194,8 +194,8 @@ const AppInner = () => {
           axios.get('/api/readings/latest'),
           axios.get('/api/devices')
         ]);
-        setReadings(readingsRes.data);
-        setDevices(devicesRes.data);
+        setReadings(Array.isArray(readingsRes.data) ? readingsRes.data : []);
+        setDevices(Array.isArray(devicesRes.data) ? devicesRes.data : []);
       } catch (err) {
         console.error('Error fetching initial data:', err);
       }
@@ -333,11 +333,100 @@ const AppInner = () => {
   );
 };
 
-// Wrap AppInner in the provider so every child can call useAuth()
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('[HY-AQMS ErrorBoundary] Caught error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          height: '100vh', width: '100vw',
+          background: '#0B1519', color: '#E2F1F5',
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          padding: '2rem', boxSizing: 'border-box',
+          fontFamily: '"Times New Roman", Times, serif',
+          position: 'relative', overflow: 'hidden'
+        }}>
+          <div style={{ position: 'absolute', top: '-10%', left: '30%', width: '40%', height: '40%', background: 'rgba(239, 68, 68, 0.08)', borderRadius: '50%', filter: 'blur(100px)' }} />
+          <div style={{ position: 'absolute', bottom: '-10%', right: '30%', width: '40%', height: '40%', background: 'rgba(2, 239, 240, 0.05)', borderRadius: '50%', filter: 'blur(100px)' }} />
+          
+          <div style={{
+            background: 'rgba(11, 21, 25, 0.8)',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            borderRadius: '16px', padding: '3rem',
+            maxWidth: '600px', width: '100%',
+            textAlign: 'center', boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+            backdropFilter: 'blur(12px)', zIndex: 10
+          }}>
+            <div style={{ fontSize: '3.5rem', marginBottom: '1.5rem' }}>⚠️</div>
+            <h2 style={{ color: '#ef4444', margin: '0 0 1rem 0', fontSize: '1.8rem', fontWeight: '800', letterSpacing: '1px' }}>
+              CRITICAL INTERFACE FAULT
+            </h2>
+            <p style={{ fontSize: '0.95rem', color: '#94a3b8', lineHeight: '1.6', margin: '0 0 2rem 0' }}>
+              An unexpected rendering crash occurred. This is commonly caused by an unreachable backend API or missing environment configurations in your Vercel deployment.
+            </p>
+            <div style={{
+              background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '8px', padding: '1rem', marginBottom: '2rem',
+              textAlign: 'left', overflowX: 'auto', maxHeight: '150px'
+            }}>
+              <code style={{ fontSize: '0.8rem', color: '#f87171', fontFamily: 'monospace', display: 'block', whiteSpace: 'pre-wrap' }}>
+                {this.state.error?.stack || this.state.error?.message || String(this.state.error)}
+              </code>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+              <button
+                onClick={() => window.location.reload()}
+                style={{
+                  width: '100%', padding: '0.8rem',
+                  background: 'linear-gradient(135deg, #02eff0, #00d2ff)',
+                  color: '#0b1519', border: 'none', borderRadius: '8px',
+                  fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem',
+                  boxShadow: '0 4px 15px rgba(2, 239, 240, 0.3)', transition: 'all 0.2s'
+                }}
+              >
+                Re-establish Link (Reload)
+              </button>
+              <a
+                href="https://vercel.com"
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  fontSize: '0.8rem', color: '#64748b', textDecoration: 'underline',
+                  cursor: 'pointer', display: 'inline-block', marginTop: '0.5rem'
+                }}
+              >
+                Configure VITE_API_URL on Vercel Dashboard
+              </a>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+// Wrap AppInner in the provider and error boundary so every child can call useAuth()
 const App = () => (
-  <AuthProvider>
-    <AppInner />
-  </AuthProvider>
+  <ErrorBoundary>
+    <AuthProvider>
+      <AppInner />
+    </AuthProvider>
+  </ErrorBoundary>
 );
 
 export default App;

@@ -41,8 +41,11 @@ const MapView = ({ readings }) => {
 
   useEffect(() => {
     axios.get('/api/devices')
-      .then(res => setDevices(res.data))
-      .catch(err => console.error('Error fetching devices:', err));
+      .then(res => setDevices(Array.isArray(res.data) ? res.data : []))
+      .catch(err => {
+        console.error('Error fetching devices:', err);
+        setDevices([]);
+      });
   }, []);
 
   // Compute live analytics
