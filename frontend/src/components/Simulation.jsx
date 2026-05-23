@@ -144,7 +144,6 @@ const SensorToggleCard = ({ device, enabled, stats, onToggle }) => {
 // ── Main Simulation Component ─────────────────────────────────────────────────
 const Simulation = () => {
   const { isAdmin } = useAuth();
-  if (!isAdmin) return <AccessDenied />;
 
   // ── Core state ───────────────────────────────────────────────────────────────
   const [deviceId, setDeviceId]   = useState('');
@@ -168,10 +167,11 @@ const Simulation = () => {
 
   // Clean up all per-sensor intervals on unmount
   useEffect(() => {
-    return () => Object.values(sensorIntervals.current).forEach(clearInterval);
+    const intervals = sensorIntervals.current;
+    return () => Object.values(intervals).forEach(clearInterval);
   }, []);
 
-  // ── Auto-pilot: inject into ALL devices every 30 s ──────────────────────────
+  // ── Auto-pilot: inject into ALL devices every 60 s ──────────────────────────
   useEffect(() => {
     if (!isAutoPilot || devices.length === 0) return;
 
@@ -197,9 +197,9 @@ const Simulation = () => {
       });
     };
 
-    addLog(`Auto-pilot engaged — broadcasting to ${devices.length} sensor(s) every 30 s.`, 'info');
+    addLog(`Auto-pilot engaged — broadcasting to ${devices.length} sensor(s) every 60 s.`, 'info');
     injectAll();
-    const id = setInterval(injectAll, 30000);
+    const id = setInterval(injectAll, 60000);
     return () => { clearInterval(id); addLog('Auto-pilot disengaged.', 'info'); };
   }, [isAutoPilot, devices]);
 
@@ -209,7 +209,7 @@ const Simulation = () => {
       .then(res => {
         const devicesData = Array.isArray(res.data) ? res.data : [];
         setDevices(devicesData);
-        if (devicesData.length > 0 && !deviceId) setDeviceId(devicesData[0].device_id);
+        setDeviceId(prevId => !prevId && devicesData.length > 0 ? devicesData[0].device_id : prevId);
       })
       .catch(err => {
         addLog(`FAILED TO FETCH DEVICES: ${err.message}`, 'error');
@@ -269,9 +269,9 @@ const Simulation = () => {
       };
 
       inject();                                                        // immediate
-      sensorIntervals.current[device_id] = setInterval(inject, 30000); // then every 30 s
+      sensorIntervals.current[device_id] = setInterval(inject, 60000); // then every 60 s
       setSensorEnabled(prev => ({ ...prev, [device_id]: true }));
-      addLog(`▶ STARTED: ${device.name || device_id} — injecting every 30 s`, 'info');
+      addLog(`▶ STARTED: ${device.name || device_id} — injecting every 60 s`, 'info');
     }
   };
 
@@ -287,6 +287,8 @@ const Simulation = () => {
       addLog(`ERR: ${err.response?.data?.error || err.message}`, 'error');
     }
   };
+
+  if (!isAdmin) return <AccessDenied />;
 
   // ── EPA presets ─────────────────────────────────────────────────────────────
   const setPreset = (type) => {
