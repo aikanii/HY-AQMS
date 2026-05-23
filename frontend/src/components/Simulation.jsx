@@ -171,7 +171,7 @@ const Simulation = () => {
     return () => Object.values(intervals).forEach(clearInterval);
   }, []);
 
-  // ── Auto-pilot: inject into ALL devices every 60 s ──────────────────────────
+  // ── Auto-pilot: inject into ALL devices every 120 s (2 minutes) ───────────
   useEffect(() => {
     if (!isAutoPilot || devices.length === 0) return;
 
@@ -197,9 +197,9 @@ const Simulation = () => {
       });
     };
 
-    addLog(`Auto-pilot engaged — broadcasting to ${devices.length} sensor(s) every 60 s.`, 'info');
+    addLog(`Auto-pilot engaged — broadcasting to ${devices.length} sensor(s) every 2 minutes.`, 'info');
     injectAll();
-    const id = setInterval(injectAll, 60000);
+    const id = setInterval(injectAll, 120000);
     return () => { clearInterval(id); addLog('Auto-pilot disengaged.', 'info'); };
   }, [isAutoPilot, devices]);
 
